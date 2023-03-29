@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 public class Main {
 
+    private static String[] typeOfDataAndSorting = new String[2];
+
     private static final String SORTING_TYPE_MARKER = "-sortingType";
     private static final String DATA_TYPE_MARKER = "-dataType";
     private static final String SORT_NATURAL_PARAMETER = "natural";
@@ -16,15 +18,29 @@ public class Main {
 
     public static void main(final String[] args) {
 
-        String[] typeOfDataAndSorting = parseArguments(args);
+        boolean isArgumentsCorrect;
+
+        isArgumentsCorrect = parseArguments(args);
 
         //System.out.println(typeOrOperationChosen);
 
-        switch (typeOfDataAndSorting[1]) {
-            case LONG_TYPE_PARAMETER:    {operateLongs(typeOfDataAndSorting[0]); break;}
-            case LINE_TYPE_PARAMETER:    {operateLines(typeOfDataAndSorting[0]); break;}
-            case WORD_TYPE_PARAMETER:    {operateWords(typeOfDataAndSorting[0]); break;}
-            default: System.out.println("Something is wrong.");
+        if (isArgumentsCorrect) {
+            switch (typeOfDataAndSorting[1]) {
+                case LONG_TYPE_PARAMETER: {
+                    operateLongs(typeOfDataAndSorting[0]);
+                    break;
+                }
+                case LINE_TYPE_PARAMETER: {
+                    operateLines(typeOfDataAndSorting[0]);
+                    break;
+                }
+                case WORD_TYPE_PARAMETER: {
+                    operateWords(typeOfDataAndSorting[0]);
+                    break;
+                }
+                default:
+                    System.out.println("Something is wrong.");
+            }
         }
     }
 
@@ -117,16 +133,23 @@ public class Main {
         TreeMap<Long, Long> numbers = new TreeMap<>();
         long newQuantity;
         int numbersCounter = 0;
+        String nextString = null;
+        long number;
 
-        while (scanner.hasNextLong()) {
-            long number = scanner.nextLong();
-            numbersCounter++;
-            // write your code here
-            if (numbers.containsKey(number)) {
-                newQuantity = numbers.get(number) + 1;
-                numbers.put(number, newQuantity);
-            } else {
-                numbers.put(number, 1L);
+        while (scanner.hasNext()) {
+            try {
+                nextString = scanner.next();
+                number = Long.parseLong(nextString);
+                numbersCounter++;
+
+                if (numbers.containsKey(number)) {
+                    newQuantity = numbers.get(number) + 1;
+                    numbers.put(number, newQuantity);
+                } else {
+                    numbers.put(number, 1L);
+                }
+            } catch (NumberFormatException exception) {
+                System.out.println("\"" + nextString + "\" is not a long. It will be skipped.");
             }
         }
 
@@ -135,9 +158,9 @@ public class Main {
 
         if (Main.SORT_NATURAL_PARAMETER.equals(sortingType)) {
             System.out.print("Sorted data:");
-            for (Long number : numbers.keySet()) {
-                for (long i = 0; i < numbers.get(number); i++) {
-                    System.out.print(" " + number);
+            for (Long num : numbers.keySet()) {
+                for (long i = 0; i < numbers.get(num); i++) {
+                    System.out.print(" " + num);
                 }
             }
         } else if (Main.SORT_BY_COUNT_PARAMETER.equals(sortingType)) {
@@ -146,9 +169,9 @@ public class Main {
 
             //output sorted byCount elements
             //System.out.println();
-            for (Long number : numbersSortedByCount) {
-                System.out.println(number + ": " + numbers.get(number) + " time(s), " +
-                        Math.round(100 * (double) numbers.get(number) / numbersCounter) + "%");
+            for (Long num : numbersSortedByCount) {
+                System.out.println(num + ": " + numbers.get(num) + " time(s), " +
+                        Math.round(100 * (double) numbers.get(num) / numbersCounter) + "%");
             }
         }
 
@@ -161,25 +184,50 @@ public class Main {
     If sorting type is not passed then result[0] = "natural".
     If data type is not passed then result[1] = "words".
      */
-    private static String[] parseArguments(String[] args) {
+    private static boolean parseArguments(String[] args) {
+
+        boolean isArgumentsCorrect = true;
         String[] result = new String[2];
         ArrayList<String> allArguments = new ArrayList<>();
         Collections.addAll(allArguments, args);
 
         if (allArguments.contains(Main.SORTING_TYPE_MARKER)) {
-            int index = allArguments.indexOf(Main.SORTING_TYPE_MARKER) + 1;
-            result[0] = allArguments.get(index);
+            if (allArguments.contains(Main.SORT_NATURAL_PARAMETER)) {
+                result[0] = Main.SORT_NATURAL_PARAMETER;
+            } else if (allArguments.contains(Main.SORT_BY_COUNT_PARAMETER)) {
+                result[0] = Main.SORT_BY_COUNT_PARAMETER;
+            } else {
+                isArgumentsCorrect = false;
+                System.out.println("No sorting type defined!");
+            }
         } else {
             result[0] = Main.SORT_NATURAL_PARAMETER;
         }
 
         if (allArguments.contains(Main.DATA_TYPE_MARKER)) {
-            int index = allArguments.indexOf(Main.DATA_TYPE_MARKER) + 1;
-            result[1] = allArguments.get(index);
+            if (allArguments.contains(Main.LINE_TYPE_PARAMETER)) {
+                result[1] = Main.LINE_TYPE_PARAMETER;
+            } else if (allArguments.contains(Main.LONG_TYPE_PARAMETER)) {
+                result[1] = Main.LONG_TYPE_PARAMETER;
+            } else if (allArguments.contains(Main.WORD_TYPE_PARAMETER)) {
+                result[1] = Main.WORD_TYPE_PARAMETER;
+            } else {
+                isArgumentsCorrect = false;
+                System.out.println("No data type defined!");
+            }
         } else {
             result[1] = Main.WORD_TYPE_PARAMETER;
         }
-        return result;
+        Main.typeOfDataAndSorting = result;
+
+        for (String arg : allArguments) {
+            if (arg.matches("-.*") &&
+                    (!Main.DATA_TYPE_MARKER.equals(arg) & !Main.SORTING_TYPE_MARKER.equals(arg))) {
+                System.out.println("\"" + arg + "\" is not a valid parameter. It will be skipped.");
+            }
+        }
+
+        return isArgumentsCorrect;
     }
 
     /*
